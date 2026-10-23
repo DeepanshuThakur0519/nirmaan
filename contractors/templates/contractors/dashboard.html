@@ -1,0 +1,80 @@
+{% extends "contractors/base.html" %}
+
+{% block title %}Dashboard | Nirmaan{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <span class="eyebrow">निर्माण &middot; Contractor dashboard</span>
+  <h1>Hello, {{ user.first_name|default:user.username }}</h1>
+  <p>Manage your company profile and show your best work.</p>
+</section>
+
+<div class="list-wrap dash">
+
+  {% if not profile %}
+    <div class="notice notice-info">
+      <h2>Step 1: Create your company profile</h2>
+      <p>Tell clients who you are, where you work and what you build. After you save it, our team reviews it before it goes public.</p>
+      <a class="btn btn-gold" href="{% url 'contractors:profile_edit' %}">Create company profile</a>
+    </div>
+  {% else %}
+
+    {% if profile.verified %}
+      <div class="notice notice-ok">✔ Your profile is verified and visible to clients.
+        <a href="{% url 'contractors:detail' profile.pk %}">View your public page →</a>
+      </div>
+    {% else %}
+      <div class="notice notice-wait">⏳ Your profile is under review. It will appear on Nirmaan once our team verifies it. Meanwhile, add your best projects below.</div>
+    {% endif %}
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>{{ profile.company_name }}</h2>
+        <a class="btn btn-outline btn-inline" href="{% url 'contractors:profile_edit' %}">Edit profile</a>
+      </div>
+      <div class="stat-row">
+        <div class="stat-box"><strong>{{ profile.city }}</strong><span>City</span></div>
+        <div class="stat-box"><strong>{{ profile.experience_years }} yrs</strong><span>Experience</span></div>
+        <div class="stat-box"><strong>₹{{ profile.min_budget|floatformat:0 }} – ₹{{ profile.max_budget|floatformat:0 }}</strong><span>Budget range</span></div>
+      </div>
+      <p class="tags profile-tags">
+        {% for s in profile.specialties.all %}<span class="tag">{{ s.name }}</span>{% endfor %}
+      </p>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Your portfolio</h2>
+        <a class="btn btn-gold btn-sm" href="{% url 'contractors:project_add' %}">+ Add project</a>
+      </div>
+
+      {% for p in projects %}
+        {% with images=p.images.all %}
+        <div class="proj-row">
+          {% if images %}
+            <img class="proj-thumb" src="{{ images.0.image.url }}" alt="{{ p.title }}">
+          {% else %}
+            <div class="proj-thumb placeholder">🏗️</div>
+          {% endif %}
+          <div class="proj-info">
+            <strong>{{ p.title }}</strong>
+            <p class="muted">
+              {% if p.location %}{{ p.location }}{% endif %}
+              {% if p.completed_year %} &middot; {{ p.completed_year }}{% endif %}
+              &middot; {{ images|length }} photo{{ images|length|pluralize }}
+            </p>
+          </div>
+          <div class="proj-actions">
+            <a class="btn btn-outline btn-inline" href="{% url 'contractors:project_edit' p.pk %}">Edit</a>
+            <a class="btn btn-outline btn-inline btn-danger" href="{% url 'contractors:project_delete' p.pk %}">Delete</a>
+          </div>
+        </div>
+        {% endwith %}
+      {% empty %}
+        <p class="muted">No projects yet. Clients trust contractors who show real work, so add your first project.</p>
+      {% endfor %}
+    </div>
+
+  {% endif %}
+</div>
+{% endblock %}

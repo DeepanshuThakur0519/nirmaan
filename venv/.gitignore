@@ -1,0 +1,19 @@
+# Virtual environment (can be rebuilt from requirements.txt)
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Local database: contains real user data and password hashes
+db.sqlite3
+
+# User uploads
+media/
+
+# Secrets and local settings
+.env
+
+# Editor and logs
+.vscode/
+*.log

@@ -1,0 +1,94 @@
+{% extends "contractors/base.html" %}
+
+{% block title %}{{ contractor.company_name }} | Nirmaan{% endblock %}
+
+{% block content %}
+
+<section class="profile-head">
+  <div class="profile-head-inner">
+    <div class="avatar avatar-lg">{{ contractor.company_name|slice:":1"|upper }}</div>
+    <div>
+      <a class="back-link" href="{% url 'contractors:list' %}">← All contractors</a>
+      <h1>{{ contractor.company_name }}</h1>
+      <p class="profile-sub">📍 {{ contractor.city }} <span class="badge">✔ Verified by Nirmaan</span></p>
+    </div>
+  </div>
+</section>
+
+<div class="profile-layout">
+
+  <div class="profile-main">
+
+    <div class="panel">
+      <div class="stat-row">
+        <div class="stat-box"><strong>{{ contractor.experience_years }} yrs</strong><span>Experience</span></div>
+        <div class="stat-box"><strong>{{ projects|length }}</strong><span>Projects shown</span></div>
+        <div class="stat-box"><strong>₹{{ contractor.min_budget|floatformat:0 }} – ₹{{ contractor.max_budget|floatformat:0 }}</strong><span>Budget range</span></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>About</h2>
+      {% if contractor.about %}
+        <p>{{ contractor.about|linebreaksbr }}</p>
+      {% else %}
+        <p class="muted">This contractor has not added a description yet.</p>
+      {% endif %}
+      <p class="tags profile-tags">
+        {% for s in contractor.specialties.all %}<span class="tag">{{ s.name }}</span>{% endfor %}
+      </p>
+    </div>
+
+    <div class="panel">
+      <h2>Portfolio</h2>
+
+      <div class="projects">
+        {% for project in projects %}
+          <article class="project">
+            {% with images=project.images.all %}
+              {% if images %}
+                <img class="project-cover" src="{{ images.0.image.url }}" alt="{{ project.title }}">
+              {% else %}
+                <div class="project-cover project-empty">🏗️</div>
+              {% endif %}
+
+              <div class="project-body">
+                <h3>{{ project.title }}</h3>
+                <p class="project-meta">
+                  {% if project.location %}<span>📍 {{ project.location }}</span>{% endif %}
+                  {% if project.specialty %}<span>🏷️ {{ project.specialty.name }}</span>{% endif %}
+                  {% if project.completed_year %}<span>📅 {{ project.completed_year }}</span>{% endif %}
+                  {% if project.duration_months %}<span>⏱️ {{ project.duration_months }} month{{ project.duration_months|pluralize }}</span>{% endif %}
+                  {% if project.cost %}<span>💰 ₹{{ project.cost|floatformat:0 }}</span>{% endif %}
+                </p>
+                {% if project.description %}<p class="project-text">{{ project.description|linebreaksbr }}</p>{% endif %}
+              </div>
+
+              {% if images|length > 1 %}
+                <div class="thumbs">
+                  {% for img in images|slice:"1:" %}
+                    <a href="{{ img.image.url }}" target="_blank" rel="noopener"><img src="{{ img.image.url }}" alt="{{ img.caption|default:project.title }}"></a>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            {% endwith %}
+          </article>
+        {% empty %}
+          <p class="muted">No projects have been added to this portfolio yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+
+  <aside class="profile-side">
+    <div class="panel side-card">
+      <h2>Interested?</h2>
+      <p class="muted">Share your project details and budget to get a quote from {{ contractor.company_name }}.</p>
+      <a class="btn btn-gold btn-block" href="#">Request a quote</a>
+      <p class="side-note">✔ Verified by the Nirmaan team</p>
+    </div>
+  </aside>
+
+</div>
+{% endblock %}

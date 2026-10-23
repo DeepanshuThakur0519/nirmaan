@@ -1,0 +1,129 @@
+{% extends "contractors/base.html" %}
+{% load static %}
+
+{% block content %}
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow">निर्माण &middot; Building your vision, together</span>
+    <h1>Build your dream with <span class="accent">contractors you can trust.</span></h1>
+    <p class="lead">
+      From your dream home to a new warehouse, Nirmaan helps you compare verified,
+      experienced contractors by their real portfolios and choose the one that fits your budget.
+    </p>
+    <div class="hero-actions">
+      <a class="btn btn-gold" href="{% url 'contractors:list' %}">Find a contractor</a>
+      <a class="btn btn-ghost" href="#how">See how it works</a>
+    </div>
+    <ul class="trust-row">
+      <li>✔ Verified profiles</li>
+      <li>✔ Real project portfolios</li>
+      <li>✔ Budget-based matching</li>
+    </ul>
+  </div>
+</section>
+
+<!-- LIVE STATS -->
+<section class="stats">
+  <div class="stat"><strong>{{ verified_count }}</strong><span>Verified contractor{{ verified_count|pluralize }}</span></div>
+  <div class="stat"><strong>{{ city_count }}</strong><span>Cit{{ city_count|pluralize:"y,ies" }} covered</span></div>
+  <div class="stat"><strong>{{ specialty_count }}</strong><span>Types of work</span></div>
+</section>
+
+<!-- CATEGORIES -->
+<section id="categories" class="section">
+  <div class="section-head">
+    <span class="kicker">What do you want to build?</span>
+    <h2>Every kind of construction, one trusted place</h2>
+  </div>
+  <div class="category-grid">
+    <div class="category"><span class="icon">🏠</span><h3>Dream Homes</h3><p>Villas, bungalows and family homes built the way you imagined.</p></div>
+    <div class="category"><span class="icon">🏢</span><h3>Commercial Buildings</h3><p>Offices, complexes and business premises built to last.</p></div>
+    <div class="category"><span class="icon">🏭</span><h3>Warehouses &amp; Industrial</h3><p>Large-span structures for storage, logistics and factories.</p></div>
+    <div class="category"><span class="icon">🏪</span><h3>Shops &amp; Showrooms</h3><p>Retail spaces designed to bring customers in.</p></div>
+    <div class="category"><span class="icon">🛠️</span><h3>Renovation</h3><p>Give an existing space a complete new life.</p></div>
+    <div class="category"><span class="icon">🛋️</span><h3>Interiors</h3><p>Finishing, fittings and interior work done right.</p></div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how" class="section section-tint">
+  <div class="section-head">
+    <span class="kicker">Simple process</span>
+    <h2>How Nirmaan works</h2>
+  </div>
+  <div class="steps">
+    <div class="step"><span class="step-no">1</span><h3>Tell us your need</h3><p>Choose the type of work, your city and your budget range.</p></div>
+    <div class="step"><span class="step-no">2</span><h3>Compare portfolios</h3><p>Review verified contractors and the real projects they have completed.</p></div>
+    <div class="step"><span class="step-no">3</span><h3>Request a quote</h3><p>Send your project details to the contractors you like and decide with confidence.</p></div>
+  </div>
+</section>
+
+<!-- WHY NIRMAAN -->
+<section class="why">
+  <div class="why-inner">
+    <div class="section-head light">
+      <span class="kicker">Why Nirmaan</span>
+      <h2>Trust is built in, not promised</h2>
+    </div>
+    <div class="why-grid">
+      <div class="why-item"><h3>✔ Manually verified</h3><p>Contractors appear as verified only after we review them.</p></div>
+      <div class="why-item"><h3>📷 Proof of work</h3><p>See completed projects, not just claims.</p></div>
+      <div class="why-item"><h3>💰 Fits your budget</h3><p>Filter contractors by the budget range they work in.</p></div>
+      <div class="why-item"><h3>⭐ Honest reviews</h3><p>Feedback from real clients who hired through Nirmaan.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURED -->
+<section id="featured" class="section">
+  <div class="section-head">
+    <span class="kicker">Meet the builders</span>
+    <h2>Featured verified contractors</h2>
+  </div>
+
+  <div class="cards">
+    {% for c in featured %}
+      <article class="card">
+        <div class="card-top">
+          <div class="avatar">{{ c.company_name|slice:":1"|upper }}</div>
+          <div>
+            <h3>{{ c.company_name }}</h3>
+            <p class="muted">📍 {{ c.city }}</p>
+          </div>
+          <span class="badge">✔ Verified</span>
+        </div>
+
+        {% if c.about %}<p class="about">{{ c.about|truncatechars:90 }}</p>{% endif %}
+
+        <ul class="meta">
+          <li><strong>{{ c.experience_years }} yrs</strong><span>Experience</span></li>
+          <li><strong>₹{{ c.min_budget|floatformat:0 }} – ₹{{ c.max_budget|floatformat:0 }}</strong><span>Budget range</span></li>
+        </ul>
+
+        <p class="tags">
+          {% for s in c.specialties.all %}<span class="tag">{{ s.name }}</span>{% endfor %}
+        </p>
+
+        <a class="btn btn-outline" href="{% url 'contractors:detail' c.pk %}">View profile</a>
+      </article>
+    {% empty %}
+      <p class="empty">No verified contractors yet. Check back soon.</p>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- BRAND BANNER -->
+<section class="brand-banner">
+  <img src="{% static 'contractors/images/nirmaan-brand.png' %}" alt="Nirmaan: Building your vision, together">
+</section>
+
+<!-- CONTRACTOR CTA -->
+<section class="cta">
+  <h2>Are you a contractor?</h2>
+  <p>Show your best work, get verified and be found by people who are ready to build.</p>
+  <a class="btn btn-gold" href="{% url 'contractors:signup' %}?role=contractor">Create your Nirmaan profile</a>
+</section>
+
+{% endblock %}

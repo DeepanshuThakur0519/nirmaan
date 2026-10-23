@@ -1,0 +1,22 @@
+{% extends "contractors/base.html" %}
+
+{% block title %}Log in | Nirmaan{% endblock %}
+
+{% block content %}
+<section class="auth-wrap">
+  <div class="auth-card">
+    <h1>Welcome back</h1>
+    <p class="muted">Log in to your Nirmaan account.</p>
+
+    <form method="post">
+      {% csrf_token %}
+      {% if form.non_field_errors %}<div class="form-error">{{ form.non_field_errors }}</div>{% endif %}
+      {% include "contractors/_form_fields.html" %}
+      <input type="hidden" name="next" value="{{ next }}">
+      <button type="submit" class="btn btn-gold btn-block">Log in</button>
+    </form>
+
+    <p class="auth-switch">New to Nirmaan? <a href="{% url 'contractors:signup' %}">Create an account</a></p>
+  </div>
+</section>
+{% endblock %}

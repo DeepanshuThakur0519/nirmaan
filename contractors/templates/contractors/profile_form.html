@@ -1,0 +1,21 @@
+{% extends "contractors/base.html" %}
+
+{% block title %}Company profile | Nirmaan{% endblock %}
+
+{% block content %}
+<section class="auth-wrap">
+  <div class="auth-card auth-card-wide">
+    <h1>{% if is_new %}Create your company profile{% else %}Edit company profile{% endif %}</h1>
+    <p class="muted">This is what clients see when they find you on Nirmaan.</p>
+
+    <form method="post">
+      {% csrf_token %}
+      {% if form.non_field_errors %}<div class="form-error">{{ form.non_field_errors }}</div>{% endif %}
+      {% include "contractors/_form_fields.html" %}
+      <button type="submit" class="btn btn-gold btn-block">Save profile</button>
+    </form>
+
+    <p class="auth-switch"><a href="{% url 'contractors:dashboard' %}">← Back to dashboard</a></p>
+  </div>
+</section>
+{% endblock %}

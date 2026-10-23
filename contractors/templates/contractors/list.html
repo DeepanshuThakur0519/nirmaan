@@ -1,0 +1,107 @@
+{% extends "contractors/base.html" %}
+
+{% block title %}Find Contractors | Nirmaan{% endblock %}
+
+{% block content %}
+
+<section class="page-hero">
+  <span class="eyebrow">निर्माण &middot; Verified contractors</span>
+  <h1>Find the right contractor</h1>
+  <p>Filter by the work you need, your budget and experience, then compare.</p>
+</section>
+
+<div class="list-wrap">
+
+  <form method="get" class="filters">
+    <div>
+      <label for="q">Search</label>
+      <input type="text" id="q" name="q" value="{{ q }}" placeholder="Name or city">
+    </div>
+
+    <div>
+      <label for="specialty">Type of work</label>
+      <select id="specialty" name="specialty">
+        <option value="">All types</option>
+        {% for s in specialties %}
+          <option value="{{ s.id }}" {% if s.id|stringformat:"s" == specialty %}selected{% endif %}>{{ s.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div>
+      <label for="budget">Your budget (₹)</label>
+      <input type="number" id="budget" name="budget" min="0" value="{{ budget }}" placeholder="e.g. 2500000">
+    </div>
+
+    <div>
+      <label for="experience">Min. experience</label>
+      <select id="experience" name="experience">
+        <option value="">Any</option>
+        <option value="3" {% if experience == "3" %}selected{% endif %}>3+ years</option>
+        <option value="5" {% if experience == "5" %}selected{% endif %}>5+ years</option>
+        <option value="10" {% if experience == "10" %}selected{% endif %}>10+ years</option>
+        <option value="15" {% if experience == "15" %}selected{% endif %}>15+ years</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="sort">Sort by</label>
+      <select id="sort" name="sort">
+        <option value="">Newest</option>
+        <option value="experience" {% if sort == "experience" %}selected{% endif %}>Most experienced</option>
+        <option value="budget_low" {% if sort == "budget_low" %}selected{% endif %}>Lowest budget first</option>
+      </select>
+    </div>
+
+    <div class="filter-actions">
+      <button type="submit" class="btn btn-gold">Search</button>
+      <a class="clear-link" href="{% url 'contractors:list' %}">Clear</a>
+    </div>
+  </form>
+
+  <p class="result-count">{{ total }} verified contractor{{ total|pluralize }} found</p>
+
+  <div class="cards">
+    {% for c in page_obj %}
+      <article class="card">
+        <div class="card-top">
+          <div class="avatar">{{ c.company_name|slice:":1"|upper }}</div>
+          <div>
+            <h3>{{ c.company_name }}</h3>
+            <p class="muted">📍 {{ c.city }}</p>
+          </div>
+          <span class="badge">✔ Verified</span>
+        </div>
+
+        {% if c.about %}<p class="about">{{ c.about|truncatechars:90 }}</p>{% endif %}
+
+        <ul class="meta">
+          <li><strong>{{ c.experience_years }} yrs</strong><span>Experience</span></li>
+          <li><strong>₹{{ c.min_budget|floatformat:0 }} – ₹{{ c.max_budget|floatformat:0 }}</strong><span>Budget range</span></li>
+        </ul>
+
+        <p class="tags">
+          {% for s in c.specialties.all %}<span class="tag">{{ s.name }}</span>{% endfor %}
+        </p>
+
+        <a class="btn btn-outline" href="#">View profile</a>
+      </article>
+    {% empty %}
+      <p class="empty">No contractors match these filters. Try widening your budget or clearing a filter.</p>
+    {% endfor %}
+  </div>
+
+  {% if page_obj.has_other_pages %}
+    <nav class="pagination">
+      {% if page_obj.has_previous %}
+        <a href="?{{ querystring }}&page={{ page_obj.previous_page_number }}">← Previous</a>
+      {% endif %}
+      <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+      {% if page_obj.has_next %}
+        <a href="?{{ querystring }}&page={{ page_obj.next_page_number }}">Next →</a>
+      {% endif %}
+    </nav>
+  {% endif %}
+
+</div>
+{% endblock %}

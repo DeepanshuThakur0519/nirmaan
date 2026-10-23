@@ -1,0 +1,51 @@
+{% extends "contractors/base.html" %}
+
+{% block title %}{% if project %}Edit project{% else %}Add project{% endif %} | Nirmaan{% endblock %}
+
+{% block content %}
+<section class="auth-wrap">
+  <div class="auth-card auth-card-wide">
+    <h1>{% if project %}Edit project{% else %}Add a project{% endif %}</h1>
+    <p class="muted">Real projects with real photos are what win clients' trust.</p>
+
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {% if form.non_field_errors %}<div class="form-error">{{ form.non_field_errors }}</div>{% endif %}
+      {% include "contractors/_form_fields.html" %}
+
+      <h2 class="sub-title">Photos</h2>
+      <p class="muted">Up to 8 photos. JPG or PNG, 5 MB each.</p>
+
+      {{ formset.management_form }}
+      {% if formset.non_form_errors %}<div class="form-error">{{ formset.non_form_errors }}</div>{% endif %}
+
+      {% for f in formset %}
+        <div class="image-row">
+          {% for hidden in f.hidden_fields %}{{ hidden }}{% endfor %}
+          {% if f.instance.pk and f.instance.image %}
+            <img class="image-thumb" src="{{ f.instance.image.url }}" alt="">
+          {% endif %}
+          <div class="image-fields">
+            <div class="field">
+              <label>Photo</label>
+              {{ f.image }}
+              {% for error in f.image.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+            </div>
+            <div class="field">
+              <label>Caption (optional)</label>
+              {{ f.caption }}
+            </div>
+            {% if f.instance.pk %}
+              <label class="delete-check">{{ f.DELETE }} Remove this photo</label>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+
+      <button type="submit" class="btn btn-gold btn-block">Save project</button>
+    </form>
+
+    <p class="auth-switch"><a href="{% url 'contractors:dashboard' %}">← Back to dashboard</a></p>
+  </div>
+</section>
+{% endblock %}
