@@ -1,4 +1,5 @@
 {% extends "contractors/base.html" %}
+{% load rating %}
 
 {% block title %}{{ contractor.company_name }} | Nirmaan{% endblock %}
 
@@ -11,6 +12,13 @@
       <a class="back-link" href="{% url 'contractors:list' %}">← All contractors</a>
       <h1>{{ contractor.company_name }}</h1>
       <p class="profile-sub">📍 {{ contractor.city }} <span class="badge">✔ Verified by Nirmaan</span></p>
+      {% if contractor.review_count %}
+        <p class="profile-sub">
+          <span class="stars">{{ contractor.avg_rating|stars }}</span>
+          {{ contractor.avg_rating|floatformat:1 }} &middot;
+          <a class="back-link" href="#reviews">{{ contractor.review_count }} review{{ contractor.review_count|pluralize }}</a>
+        </p>
+      {% endif %}
     </div>
   </div>
 </section>
@@ -79,13 +87,44 @@
       </div>
     </div>
 
+    <div class="panel" id="reviews">
+      <div class="panel-head">
+        <h2>Client reviews</h2>
+        {% if can_review %}
+          <a class="btn btn-outline btn-inline" href="{% url 'contractors:review_edit' contractor.pk %}">{% if my_review %}Edit your review{% else %}Write a review{% endif %}</a>
+        {% endif %}
+      </div>
+
+      {% for r in reviews %}
+        <article class="review">
+          <div class="review-head">
+            <strong>{{ r.client.first_name|default:"Nirmaan client" }}</strong>
+            <span class="stars">{{ r.rating|stars }}</span>
+          </div>
+          <p class="muted">{{ r.created_at|date:"j M Y" }}</p>
+          <p>{{ r.comment|linebreaksbr }}</p>
+        </article>
+      {% empty %}
+        <p class="muted">No reviews yet. Clients can review a contractor after the contractor accepts their quote request.</p>
+      {% endfor %}
+    </div>
+
   </div>
 
   <aside class="profile-side">
     <div class="panel side-card">
       <h2>Interested?</h2>
       <p class="muted">Share your project details and budget to get a quote from {{ contractor.company_name }}.</p>
-      <a class="btn btn-gold btn-block" href="#">Request a quote</a>
+      {% if user.is_authenticated %}
+        {% if user.account.role == "client" %}
+          <a class="btn btn-gold btn-block" href="{% url 'contractors:quote_request' contractor.pk %}">Request a quote</a>
+        {% else %}
+          <p class="side-note">Quote requests are sent from client accounts.</p>
+        {% endif %}
+      {% else %}
+        <a class="btn btn-gold btn-block" href="{% url 'contractors:login' %}?next={% url 'contractors:quote_request' contractor.pk %}">Log in to request a quote</a>
+        <p class="side-note">New to Nirmaan? <a href="{% url 'contractors:signup' %}">Create a free account</a></p>
+      {% endif %}
       <p class="side-note">✔ Verified by the Nirmaan team</p>
     </div>
   </aside>

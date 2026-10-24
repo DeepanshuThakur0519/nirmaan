@@ -29,6 +29,18 @@
 
     <div class="panel">
       <div class="panel-head">
+        <h2>Quote requests</h2>
+        <a class="btn btn-gold btn-sm" href="{% url 'contractors:contractor_requests' %}">View requests</a>
+      </div>
+      {% if pending_requests %}
+        <p><strong>{{ pending_requests }}</strong> request{{ pending_requests|pluralize }} waiting for your reply.</p>
+      {% else %}
+        <p class="muted">No requests waiting. Clients who like your profile will send their project details here.</p>
+      {% endif %}
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
         <h2>{{ profile.company_name }}</h2>
         <a class="btn btn-outline btn-inline" href="{% url 'contractors:profile_edit' %}">Edit profile</a>
       </div>

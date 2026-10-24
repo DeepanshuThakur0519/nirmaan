@@ -5,33 +5,56 @@ from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Avg, Count, F, Q
 from django.shortcuts import get_object_or_404, redirect, render
 
-from .forms import ContractorProfileForm, ProjectForm, ProjectImageFormSet, SignUpForm
-from .models import ContractorProfile, Project, Specialty
+from .forms import (
+    ContractorProfileForm,
+    ProjectForm,
+    ProjectImageFormSet,
+    QuoteRequestForm,
+    QuoteResponseForm,
+    ReviewForm,
+    SignUpForm,
+)
+from .models import ContractorProfile, Project, QuoteRequest, Review, Specialty
 
 
 # ---------------------------------------------------------------- access control
-def contractor_required(view_func):
-    """Allow only logged-in users whose account role is 'contractor'."""
+def role_required(role, denied_message):
+    """Build a decorator that allows only logged-in users with the given role."""
 
-    @login_required
-    @wraps(view_func)
-    def wrapper(request, *args, **kwargs):
-        account = getattr(request.user, "account", None)
-        if account is None or account.role != "contractor":
-            messages.error(request, "That page is only for contractor accounts.")
-            return redirect("contractors:home")
-        return view_func(request, *args, **kwargs)
+    def decorator(view_func):
+        @login_required
+        @wraps(view_func)
+        def wrapper(request, *args, **kwargs):
+            account = getattr(request.user, "account", None)
+            if account is None or account.role != role:
+                messages.error(request, denied_message)
+                return redirect("contractors:home")
+            return view_func(request, *args, **kwargs)
 
-    return wrapper
+        return wrapper
+
+    return decorator
+
+
+contractor_required = role_required("contractor", "That page is only for contractor accounts.")
+client_required = role_required("client", "That page is only for client accounts.")
+
+
+def with_ratings(queryset):
+    """Add avg_rating and review_count to every contractor in the queryset."""
+    return queryset.annotate(
+        avg_rating=Avg("reviews__rating"),
+        review_count=Count("reviews", distinct=True),
+    )
 
 
 # ---------------------------------------------------------------- public pages
 def home(request):
     verified = ContractorProfile.objects.filter(verified=True)
-    featured = verified.prefetch_related("specialties")[:6]
+    featured = with_ratings(verified).prefetch_related("specialties")[:6]
     context = {
         "featured": featured,
         "verified_count": verified.count(),
@@ -42,7 +65,9 @@ def home(request):
 
 
 def contractor_list(request):
-    contractors = ContractorProfile.objects.filter(verified=True).prefetch_related("specialties")
+    contractors = with_ratings(
+        ContractorProfile.objects.filter(verified=True)
+    ).prefetch_related("specialties")
 
     # Read the search options from the URL (?q=...&specialty=...)
     q = request.GET.get("q", "").strip()
@@ -74,6 +99,9 @@ def contractor_list(request):
         contractors = contractors.order_by("-experience_years")
     elif sort == "budget_low":
         contractors = contractors.order_by("min_budget")
+    elif sort == "rating":
+        # nulls_last keeps unrated contractors at the bottom on every database
+        contractors = contractors.order_by(F("avg_rating").desc(nulls_last=True), "-review_count")
 
     paginator = Paginator(contractors, 9)
     page_obj = paginator.get_page(request.GET.get("page"))
@@ -98,13 +126,33 @@ def contractor_list(request):
 
 def contractor_detail(request, pk):
     # Only verified contractors have public pages; anything else is a 404
-    queryset = ContractorProfile.objects.filter(verified=True).prefetch_related("specialties")
+    queryset = with_ratings(
+        ContractorProfile.objects.filter(verified=True)
+    ).prefetch_related("specialties")
     contractor = get_object_or_404(queryset, pk=pk)
     projects = contractor.projects.select_related("specialty").prefetch_related("images")
+    reviews = contractor.reviews.select_related("client")
+
+    # Can this visitor write a review? Only a client whose request was accepted.
+    can_review = False
+    my_review = None
+    account = getattr(request.user, "account", None)
+    if account is not None and account.role == "client":
+        can_review = QuoteRequest.objects.filter(
+            client=request.user, contractor=contractor, status="accepted"
+        ).exists()
+        my_review = reviews.filter(client=request.user).first()
+
     return render(
         request,
         "contractors/detail.html",
-        {"contractor": contractor, "projects": projects},
+        {
+            "contractor": contractor,
+            "projects": projects,
+            "reviews": reviews,
+            "can_review": can_review,
+            "my_review": my_review,
+        },
     )
 
 
@@ -135,12 +183,14 @@ def signup(request):
 def dashboard(request):
     profile = ContractorProfile.objects.filter(user=request.user).first()
     projects = []
+    pending_requests = 0
     if profile:
         projects = profile.projects.select_related("specialty").prefetch_related("images")
+        pending_requests = profile.quote_requests.filter(status="pending").count()
     return render(
         request,
         "contractors/dashboard.html",
-        {"profile": profile, "projects": projects},
+        {"profile": profile, "projects": projects, "pending_requests": pending_requests},
     )
 
 
@@ -210,4 +260,102 @@ def project_delete(request, pk):
         return redirect("contractors:dashboard")
 
     return render(request, "contractors/project_confirm_delete.html", {"project": project})
-    
+
+
+# ---------------------------------------------------------------- quote requests
+@client_required
+def quote_request(request, pk):
+    contractor = get_object_or_404(ContractorProfile.objects.filter(verified=True), pk=pk)
+
+    # One open request per contractor: stops accidental duplicates and spam
+    if QuoteRequest.objects.filter(
+        client=request.user, contractor=contractor, status="pending"
+    ).exists():
+        messages.info(request, "You already have a pending request with this contractor.")
+        return redirect("contractors:my_requests")
+
+    if request.method == "POST":
+        form = QuoteRequestForm(request.POST)
+        if form.is_valid():
+            quote = form.save(commit=False)
+            quote.client = request.user  # set on the server, never from the browser
+            quote.contractor = contractor
+            quote.save()
+            messages.success(request, f"Your request was sent to {contractor.company_name}.")
+            return redirect("contractors:my_requests")
+    else:
+        form = QuoteRequestForm()
+
+    return render(request, "contractors/quote_form.html", {"form": form, "contractor": contractor})
+
+
+@client_required
+def my_requests(request):
+    quotes = request.user.quote_requests.select_related("contractor", "specialty")
+    return render(request, "contractors/my_requests.html", {"quotes": quotes})
+
+
+@contractor_required
+def contractor_requests(request):
+    profile = ContractorProfile.objects.filter(user=request.user).first()
+    if profile is None:
+        messages.error(request, "Please create your company profile first.")
+        return redirect("contractors:profile_edit")
+    quotes = profile.quote_requests.select_related("client", "specialty")
+    return render(request, "contractors/contractor_requests.html", {"quotes": quotes})
+
+
+@contractor_required
+def request_respond(request, pk):
+    profile = get_object_or_404(ContractorProfile, user=request.user)
+    # Ownership check: you can only answer requests sent to YOU
+    quote = get_object_or_404(QuoteRequest, pk=pk, contractor=profile)
+
+    if quote.status != "pending":
+        messages.info(request, "You have already answered this request.")
+        return redirect("contractors:contractor_requests")
+
+    if request.method == "POST":
+        form = QuoteResponseForm(request.POST, instance=quote)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Your reply has been sent to the client.")
+            return redirect("contractors:contractor_requests")
+    else:
+        form = QuoteResponseForm(instance=quote)
+
+    return render(request, "contractors/request_respond.html", {"quote": quote, "form": form})
+
+
+# ---------------------------------------------------------------- reviews
+@client_required
+def review_edit(request, pk):
+    contractor = get_object_or_404(ContractorProfile.objects.filter(verified=True), pk=pk)
+
+    # The trust rule: no accepted request, no review
+    has_accepted = QuoteRequest.objects.filter(
+        client=request.user, contractor=contractor, status="accepted"
+    ).exists()
+    if not has_accepted:
+        messages.error(request, "You can review a contractor after they accept your quote request.")
+        return redirect("contractors:detail", pk=contractor.pk)
+
+    review = Review.objects.filter(client=request.user, contractor=contractor).first()
+
+    if request.method == "POST":
+        form = ReviewForm(request.POST, instance=review)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.client = request.user
+            obj.contractor = contractor
+            obj.save()
+            messages.success(request, "Thank you! Your review has been saved.")
+            return redirect("contractors:detail", pk=contractor.pk)
+    else:
+        form = ReviewForm(instance=review)
+
+    return render(
+        request,
+        "contractors/review_form.html",
+        {"form": form, "contractor": contractor, "is_edit": review is not None},
+    )

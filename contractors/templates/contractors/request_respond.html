@@ -1,0 +1,30 @@
+{% extends "contractors/base.html" %}
+
+{% block title %}Reply | Nirmaan{% endblock %}
+
+{% block content %}
+<section class="auth-wrap">
+  <div class="auth-card auth-card-wide">
+    <h1>Reply to {{ quote.client.first_name|default:quote.client.username }}</h1>
+
+    <div class="reply-box">
+      <ul class="req-details">
+        {% if quote.specialty %}<li>🏷️ {{ quote.specialty.name }}</li>{% endif %}
+        <li>📍 {{ quote.location }}</li>
+        <li>💰 ₹{{ quote.budget|floatformat:0 }}</li>
+        <li>📅 {{ quote.get_timeline_display }}</li>
+      </ul>
+      <p>{{ quote.description|linebreaksbr }}</p>
+    </div>
+
+    <form method="post">
+      {% csrf_token %}
+      {% if form.non_field_errors %}<div class="form-error">{{ form.non_field_errors }}</div>{% endif %}
+      {% include "contractors/_form_fields.html" %}
+      <button type="submit" class="btn btn-gold btn-block">Send reply</button>
+    </form>
+
+    <p class="auth-switch"><a href="{% url 'contractors:contractor_requests' %}">← Back to requests</a></p>
+  </div>
+</section>
+{% endblock %}

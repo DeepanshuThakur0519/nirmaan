@@ -280,3 +280,51 @@ button.btn-link { background: none; font-family: inherit; cursor: pointer; }
   .proj-row { flex-wrap: wrap; }
   .image-row { flex-direction: column; }
 }
+/* ---------- Quote requests ---------- */
+.message.info { background: #e8f1fb; color: #1d4e89; }
+.privacy-note { margin-top: 14px; padding: 10px 14px; font-size: 13px; color: #1d4e89; background: #e8f1fb; border-radius: 10px; }
+
+.req-card { padding: 20px 22px; margin-bottom: 18px; border: 1px solid #e8edf3; border-radius: 12px; }
+.req-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 2px; }
+.req-head h3 { color: var(--navy); }
+.req-head a:hover { color: var(--gold-dark); }
+.req-details { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 12px 0; font-size: 14px; color: var(--ink); }
+.req-text { margin-bottom: 14px; color: #52606d; }
+
+.status { padding: 4px 14px; font-size: 13px; font-weight: 600; border-radius: 20px; white-space: nowrap; }
+.status-pending { background: #fff4de; color: #8a5a00; }
+.status-accepted { background: #e3f6ea; color: #17693a; }
+.status-declined { background: #fdeaea; color: #a12626; }
+
+.reply-box { margin-top: 12px; padding: 14px 18px; background: #f3f7fc; border-left: 4px solid var(--blue); border-radius: 8px; }
+.reply-box p { margin-top: 6px; }
+
+#id_status { display: grid; gap: 10px; }
+#id_status label { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid #d5dce6; border-radius: 10px; cursor: pointer; font-weight: 500; }
+#id_status label:has(input:checked) { border-color: var(--gold); background: #fbf1e9; }
+/* ---------- Ratings and reviews ---------- */
+.stars { color: var(--gold); letter-spacing: 1px; }
+.rating { margin-top: 2px; font-size: 14px; }
+.profile-sub .stars { font-size: 18px; }
+
+.review { padding: 16px 0; border-top: 1px solid #eef1f5; }
+.review-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.review-head strong { color: var(--navy); }
+.review p { margin-top: 6px; }
+
+#id_rating { display: grid; gap: 10px; }
+#id_rating label { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid #d5dce6; border-radius: 10px; cursor: pointer; font-weight: 500; }
+#id_rating label:has(input:checked) { border-color: var(--gold); background: #fbf1e9; }
+/* ---------- Ratings and reviews ---------- */
+.stars { color: var(--gold); letter-spacing: 1px; }
+.rating { margin-top: 2px; font-size: 14px; }
+.profile-sub .stars { font-size: 18px; }
+
+.review { padding: 16px 0; border-top: 1px solid #eef1f5; }
+.review-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.review-head strong { color: var(--navy); }
+.review p { margin-top: 6px; }
+
+#id_rating { display: grid; gap: 10px; }
+#id_rating label { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid #d5dce6; border-radius: 10px; cursor: pointer; font-weight: 500; }
+#id_rating label:has(input:checked) { border-color: var(--gold); background: #fbf1e9; }

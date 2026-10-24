@@ -1,0 +1,47 @@
+{% extends "contractors/base.html" %}
+
+{% block title %}Quote requests | Nirmaan{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <span class="eyebrow">निर्माण &middot; Contractor dashboard</span>
+  <h1>Quote requests</h1>
+  <p>Clients who want to work with you.</p>
+</section>
+
+<div class="list-wrap dash">
+  <div class="panel">
+    {% for q in quotes %}
+      <article class="req-card">
+        <div class="req-head">
+          <h3>{{ q.client.first_name|default:q.client.username }}</h3>
+          <span class="status status-{{ q.status }}">{{ q.get_status_display }}</span>
+        </div>
+        <p class="muted">
+          Received {{ q.created_at|date:"j M Y" }} &middot;
+          <a href="mailto:{{ q.client.email }}">{{ q.client.email }}</a>
+        </p>
+        <ul class="req-details">
+          {% if q.specialty %}<li>🏷️ {{ q.specialty.name }}</li>{% endif %}
+          <li>📍 {{ q.location }}</li>
+          <li>💰 ₹{{ q.budget|floatformat:0 }}</li>
+          <li>📅 {{ q.get_timeline_display }}</li>
+        </ul>
+        <p class="req-text">{{ q.description|linebreaksbr }}</p>
+
+        {% if q.status == "pending" %}
+          <a class="btn btn-gold btn-sm" href="{% url 'contractors:request_respond' q.pk %}">Reply to this request</a>
+        {% elif q.contractor_reply %}
+          <div class="reply-box">
+            <strong>Your reply</strong>
+            <p>{{ q.contractor_reply|linebreaksbr }}</p>
+          </div>
+        {% endif %}
+      </article>
+    {% empty %}
+      <p class="muted">No requests yet. They will appear here when clients contact you.</p>
+    {% endfor %}
+    <p class="auth-switch"><a href="{% url 'contractors:dashboard' %}">← Back to dashboard</a></p>
+  </div>
+</div>
+{% endblock %}

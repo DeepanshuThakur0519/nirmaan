@@ -31,7 +31,8 @@ class ContractorProfile(models.Model):
         ordering = ["-created_at"]
 
     def __str__(self):
-        return self.company_name      
+        return self.company_name
+
 
 class Project(models.Model):
     """A completed piece of work shown in a contractor's portfolio."""
@@ -65,6 +66,8 @@ class ProjectImage(models.Model):
 
     def __str__(self):
         return f"Image for {self.project.title}"
+
+
 class Account(models.Model):
     """Extra information about a login: is this person a client or a contractor?"""
     ROLE_CHOICES = [
@@ -75,7 +78,9 @@ class Account(models.Model):
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="client")
 
     def __str__(self):
-        return f"{self.user.username} ({self.role})"    
+        return f"{self.user.username} ({self.role})"
+
+
 class QuoteRequest(models.Model):
     """A client's project brief sent to one contractor."""
     TIMELINE_CHOICES = [
@@ -110,4 +115,36 @@ class QuoteRequest(models.Model):
 
     def __str__(self):
         return f"Quote from {self.client.username} to {self.contractor} ({self.status})"
-                    
+
+
+class Review(models.Model):
+    """A client's rating of a contractor."""
+    RATING_CHOICES = [
+        (5, "★★★★★  Excellent"),
+        (4, "★★★★  Very good"),
+        (3, "★★★  Average"),
+        (2, "★★  Poor"),
+        (1, "★  Terrible"),
+    ]
+
+    contractor = models.ForeignKey(
+        ContractorProfile, on_delete=models.CASCADE, related_name="reviews"
+    )
+    client = models.ForeignKey(User, on_delete=models.CASCADE, related_name="reviews")
+    rating = models.PositiveSmallIntegerField(choices=RATING_CHOICES)
+    comment = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["client", "contractor"],
+                name="one_review_per_client_per_contractor",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.client.username} rated {self.contractor} {self.rating}/5"
+        

@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.core.files.uploadedfile import UploadedFile
 from django.db import transaction
 
-from .models import Account, ContractorProfile, Project, ProjectImage
+from .models import Account, ContractorProfile, Project, ProjectImage, QuoteRequest, Review
 
 
 class SignUpForm(UserCreationForm):
@@ -125,3 +125,77 @@ ProjectImageFormSet = forms.inlineformset_factory(
     can_delete=True,
     max_num=8,
 )
+
+
+class QuoteRequestForm(forms.ModelForm):
+    class Meta:
+        model = QuoteRequest
+        fields = ["specialty", "location", "budget", "timeline", "description"]
+        labels = {
+            "specialty": "Type of work",
+            "location": "Where will the work happen? (city)",
+            "budget": "Your budget (₹)",
+            "timeline": "When do you want to start?",
+            "description": "Describe your project",
+        }
+        widgets = {
+            "description": forms.Textarea(
+                attrs={"rows": 6, "placeholder": "Plot size, what you want built, any special requirements..."}
+            ),
+        }
+
+    def clean_budget(self):
+        budget = self.cleaned_data["budget"]
+        if budget <= 0:
+            raise forms.ValidationError("Enter a budget greater than zero.")
+        return budget
+
+    def clean_description(self):
+        text = self.cleaned_data["description"].strip()
+        if len(text) < 20:
+            raise forms.ValidationError("Please describe your project in at least 20 characters.")
+        return text
+
+
+class QuoteResponseForm(forms.ModelForm):
+    status = forms.ChoiceField(
+        choices=[
+            ("accepted", "Accept: I would like to take this project"),
+            ("declined", "Decline: I cannot take this project"),
+        ],
+        widget=forms.RadioSelect,
+        label="Your decision",
+    )
+    contractor_reply = forms.CharField(
+        widget=forms.Textarea(attrs={"rows": 5}),
+        label="Message to the client",
+    )
+
+    class Meta:
+        model = QuoteRequest
+        fields = ["status", "contractor_reply"]
+
+
+class ReviewForm(forms.ModelForm):
+    rating = forms.TypedChoiceField(
+        choices=Review.RATING_CHOICES,
+        coerce=int,
+        widget=forms.RadioSelect,
+        label="Your rating",
+    )
+
+    class Meta:
+        model = Review
+        fields = ["rating", "comment"]
+        labels = {"comment": "Your experience"}
+        widgets = {
+            "comment": forms.Textarea(
+                attrs={"rows": 5, "placeholder": "How was the work, the communication, the quality?"}
+            ),
+        }
+
+    def clean_comment(self):
+        text = self.cleaned_data["comment"].strip()
+        if len(text) < 15:
+            raise forms.ValidationError("Please write at least 15 characters so others can learn from your review.")
+        return text

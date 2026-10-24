@@ -1,5 +1,5 @@
 {% extends "contractors/base.html" %}
-{% load static %}
+{% load static rating %}
 
 {% block content %}
 
@@ -90,7 +90,7 @@
           <div class="avatar">{{ c.company_name|slice:":1"|upper }}</div>
           <div>
             <h3>{{ c.company_name }}</h3>
-            <p class="muted">📍 {{ c.city }}</p>
+            <p class="muted">📍 {{ c.city }}</p>{% if c.review_count %}<p class="rating"><span class="stars">{{ c.avg_rating|stars }}</span> {{ c.avg_rating|floatformat:1 }} ({{ c.review_count }})</p>{% else %}<p class="rating muted">New on Nirmaan</p>{% endif %}{% if c.review_count %}<p class="rating"><span class="stars">{{ c.avg_rating|stars }}</span> {{ c.avg_rating|floatformat:1 }} ({{ c.review_count }})</p>{% else %}<p class="rating muted">New on Nirmaan</p>{% endif %}
           </div>
           <span class="badge">✔ Verified</span>
         </div>

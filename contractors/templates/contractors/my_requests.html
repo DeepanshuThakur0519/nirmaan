@@ -1,0 +1,43 @@
+{% extends "contractors/base.html" %}
+
+{% block title %}My requests | Nirmaan{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <span class="eyebrow">निर्माण &middot; Your requests</span>
+  <h1>My quote requests</h1>
+  <p>Track the answers from the contractors you contacted.</p>
+</section>
+
+<div class="list-wrap dash">
+  <div class="panel">
+    {% for q in quotes %}
+      <article class="req-card">
+        <div class="req-head">
+          <h3><a href="{% url 'contractors:detail' q.contractor.pk %}">{{ q.contractor.company_name }}</a></h3>
+          <span class="status status-{{ q.status }}">{{ q.get_status_display }}</span>
+        </div>
+        <p class="muted">Sent {{ q.created_at|date:"j M Y" }}</p>
+        <ul class="req-details">
+          {% if q.specialty %}<li>🏷️ {{ q.specialty.name }}</li>{% endif %}
+          <li>📍 {{ q.location }}</li>
+          <li>💰 ₹{{ q.budget|floatformat:0 }}</li>
+          <li>📅 {{ q.get_timeline_display }}</li>
+        </ul>
+        <p class="req-text">{{ q.description|linebreaksbr }}</p>{% if q.status == "accepted" %}<a class="btn btn-outline btn-inline" href="{% url 'contractors:review_edit' q.contractor.pk %}">Rate this contractor</a>{% endif %}
+        {% if q.status == "accepted" %}<a class="btn btn-outline btn-inline" href="{% url 'contractors:review_edit' q.contractor.pk %}">Rate this contractor</a>{% endif %}
+
+        {% if q.contractor_reply %}
+          <div class="reply-box">
+            <strong>Reply from {{ q.contractor.company_name }}</strong>
+            <p>{{ q.contractor_reply|linebreaksbr }}</p>
+          </div>
+        {% endif %}
+      </article>
+    {% empty %}
+      <p class="muted">You have not sent any requests yet.</p>
+      <a class="btn btn-gold" href="{% url 'contractors:list' %}">Find a contractor</a>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

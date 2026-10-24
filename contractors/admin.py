@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Account, ContractorProfile, Project, ProjectImage, Specialty
+from .models import Account, ContractorProfile, Project, ProjectImage, QuoteRequest, Review, Specialty
 
 admin.site.site_header = "Nirmaan Admin"
 admin.site.site_title = "Nirmaan"
@@ -43,3 +43,17 @@ class ProjectAdmin(admin.ModelAdmin):
     list_filter = ["completed_year", "specialty"]
     search_fields = ["title", "contractor__company_name"]
     inlines = [ProjectImageInline]
+
+
+@admin.register(QuoteRequest)
+class QuoteRequestAdmin(admin.ModelAdmin):
+    list_display = ["client", "contractor", "budget", "status", "created_at"]
+    list_filter = ["status", "timeline"]
+    search_fields = ["client__username", "contractor__company_name", "description"]
+
+
+@admin.register(Review)
+class ReviewAdmin(admin.ModelAdmin):
+    list_display = ["contractor", "client", "rating", "created_at"]
+    list_filter = ["rating"]
+    search_fields = ["contractor__company_name", "client__username", "comment"]
