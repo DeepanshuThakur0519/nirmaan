@@ -29,4 +29,7 @@ urlpatterns = [
     path("dashboard/projects/<int:pk>/delete/", views.project_delete, name="project_delete"),
     path("dashboard/requests/", views.contractor_requests, name="contractor_requests"),
     path("dashboard/requests/<int:pk>/", views.request_respond, name="request_respond"),
+    path("dashboard/verification/", views.verification, name="verification"),
+    path("dashboard/verification/<int:pk>/delete/", views.verification_delete, name="verification_delete"),
+    path("staff/verification-file/<int:pk>/", views.verification_file, name="verification_file"),
 ]

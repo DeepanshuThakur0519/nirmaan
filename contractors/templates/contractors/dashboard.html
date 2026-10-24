@@ -24,7 +24,7 @@
         <a href="{% url 'contractors:detail' profile.pk %}">View your public page →</a>
       </div>
     {% else %}
-      <div class="notice notice-wait">⏳ Your profile is under review. It will appear on Nirmaan once our team verifies it. Meanwhile, add your best projects below.</div>
+      <div class="notice notice-wait">⏳ Your company is not verified yet. Upload your documents so our team can review them. <a href="{% url 'contractors:verification' %}">Upload documents →</a></div>
     {% endif %}
 
     <div class="panel">

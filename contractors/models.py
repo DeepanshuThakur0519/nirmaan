@@ -1,5 +1,11 @@
+from uuid import uuid4
+
+from django.conf import settings
 from django.contrib.auth.models import User
+from django.core.files.storage import FileSystemStorage
+from django.core.validators import FileExtensionValidator
 from django.db import models
+from django.utils import timezone
 
 
 class Specialty(models.Model):
@@ -147,4 +153,57 @@ class Review(models.Model):
 
     def __str__(self):
         return f"{self.client.username} rated {self.contractor} {self.rating}/5"
-        
+
+
+def get_private_storage():
+    """A folder OUTSIDE media/, so it is never served by a web address."""
+    return FileSystemStorage(location=settings.BASE_DIR / "private_media")
+
+
+def verification_upload_path(instance, filename):
+    """Store each file under a random name, never the name the user typed."""
+    extension = filename.rsplit(".", 1)[-1].lower()
+    return f"verification/{instance.contractor_id}/{uuid4().hex}.{extension}"
+
+
+class VerificationDocument(models.Model):
+    """A document a contractor uploads so Nirmaan can verify them."""
+    DOC_TYPE_CHOICES = [
+        ("id", "Identity proof"),
+        ("licence", "Contractor licence or registration"),
+        ("business", "Business registration (GST, shop licence, etc.)"),
+        ("other", "Other supporting document"),
+    ]
+    STATUS_CHOICES = [
+        ("pending", "Pending review"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
+    ]
+
+    contractor = models.ForeignKey(
+        ContractorProfile, on_delete=models.CASCADE, related_name="documents"
+    )
+    doc_type = models.CharField(max_length=20, choices=DOC_TYPE_CHOICES)
+    file = models.FileField(
+        upload_to=verification_upload_path,
+        storage=get_private_storage,
+        validators=[FileExtensionValidator(["pdf", "jpg", "jpeg", "png"])],
+    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
+    admin_note = models.TextField(blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-uploaded_at"]
+
+    def save(self, *args, **kwargs):
+        # keep reviewed_at in step with the status
+        if self.status == "pending":
+            self.reviewed_at = None
+        elif self.reviewed_at is None:
+            self.reviewed_at = timezone.now()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.get_doc_type_display()} for {self.contractor} ({self.status})"

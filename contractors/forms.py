@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.core.files.uploadedfile import UploadedFile
 from django.db import transaction
 
-from .models import Account, ContractorProfile, Project, ProjectImage, QuoteRequest, Review
+from .models import Account, ContractorProfile, Project, ProjectImage, QuoteRequest, Review, VerificationDocument
 
 
 class SignUpForm(UserCreationForm):
@@ -199,3 +199,17 @@ class ReviewForm(forms.ModelForm):
         if len(text) < 15:
             raise forms.ValidationError("Please write at least 15 characters so others can learn from your review.")
         return text
+class VerificationDocumentForm(forms.ModelForm):
+    class Meta:
+        model = VerificationDocument
+        fields = ["doc_type", "file"]
+        labels = {
+            "doc_type": "Document type",
+            "file": "File (PDF, JPG or PNG, up to 5 MB)",
+        }
+
+    def clean_file(self):
+        file = self.cleaned_data.get("file")
+        if file and file.size > 5 * 1024 * 1024:
+            raise forms.ValidationError("The file must be 5 MB or smaller.")
+        return file        

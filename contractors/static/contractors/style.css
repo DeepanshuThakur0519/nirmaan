@@ -328,3 +328,14 @@ button.btn-link { background: none; font-family: inherit; cursor: pointer; }
 #id_rating { display: grid; gap: 10px; }
 #id_rating label { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid #d5dce6; border-radius: 10px; cursor: pointer; font-weight: 500; }
 #id_rating label:has(input:checked) { border-color: var(--gold); background: #fbf1e9; }
+/* ---------- Verification ---------- */
+.status-approved { background: #e3f6ea; color: #17693a; }
+.status-rejected { background: #fdeaea; color: #a12626; }
+.notice-wait a { margin-left: 10px; font-weight: 600; text-decoration: underline; }
+
+.checklist { list-style: none; display: grid; gap: 8px; margin-bottom: 4px; }
+.doc-row { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-top: 1px solid #eef1f5; }
+.doc-info { flex: 1; min-width: 0; }
+.doc-info strong { color: var(--navy); }
+.doc-note { margin-top: 4px; font-size: 13px; color: #a12626; }
+.inline-form { display: inline; }

@@ -1,0 +1,65 @@
+{% extends "contractors/base.html" %}
+
+{% block title %}Verification | Nirmaan{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <span class="eyebrow">निर्माण &middot; Verification</span>
+  <h1>Verify your company</h1>
+  <p>Verified contractors earn clients' trust and appear on Nirmaan.</p>
+</section>
+
+<div class="list-wrap dash">
+
+  {% if profile.verified %}
+    <div class="notice notice-ok">✔ Your company is verified and visible to clients.</div>
+  {% else %}
+    <div class="notice notice-wait">⏳ Not verified yet. Upload the documents below and our team will review them.</div>
+  {% endif %}
+
+  <div class="panel">
+    <h2>What we need</h2>
+    <ul class="checklist">
+      <li><strong>1. Identity proof</strong> of the person who runs the company.</li>
+      <li><strong>2. A contractor licence or a business registration</strong> (for example GST or a shop licence).</li>
+    </ul>
+    <p class="privacy-note">🔒 Your documents are stored privately and seen only by the Nirmaan team. They are never shown on your public page.</p>
+  </div>
+
+  <div class="panel">
+    <h2>Your documents</h2>
+    {% for d in documents %}
+      <div class="doc-row">
+        <div class="doc-info">
+          <strong>{{ d.get_doc_type_display }}</strong>
+          <p class="muted">Uploaded {{ d.uploaded_at|date:"j M Y" }}</p>
+          {% if d.status == "rejected" and d.admin_note %}
+            <p class="doc-note">Reason: {{ d.admin_note }}</p>
+          {% endif %}
+        </div>
+        <span class="status status-{{ d.status }}">{{ d.get_status_display }}</span>
+        {% if d.status != "approved" %}
+          <form method="post" action="{% url 'contractors:verification_delete' d.pk %}" class="inline-form">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline btn-inline btn-danger" onclick="return confirm('Delete this document?')">Delete</button>
+          </form>
+        {% endif %}
+      </div>
+    {% empty %}
+      <p class="muted">No documents uploaded yet.</p>
+    {% endfor %}
+  </div>
+
+  <div class="panel">
+    <h2>Upload a document</h2>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {% if form.non_field_errors %}<div class="form-error">{{ form.non_field_errors }}</div>{% endif %}
+      {% include "contractors/_form_fields.html" %}
+      <button type="submit" class="btn btn-gold">Upload document</button>
+    </form>
+  </div>
+
+  <p class="auth-switch"><a href="{% url 'contractors:dashboard' %}">← Back to dashboard</a></p>
+</div>
+{% endblock %}

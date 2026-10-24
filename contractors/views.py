@@ -1,3 +1,12 @@
+import os
+
+from django.contrib.admin.views.decorators import staff_member_required
+from django.http import FileResponse
+
+from .forms import VerificationDocumentForm
+from .models import VerificationDocument
+
+
 from decimal import Decimal, InvalidOperation
 from functools import wraps
 
@@ -359,3 +368,60 @@ def review_edit(request, pk):
         "contractors/review_form.html",
         {"form": form, "contractor": contractor, "is_edit": review is not None},
     )
+# ---------------------------------------------------------------- verification
+MAX_DOCUMENTS = 8
+
+
+@contractor_required
+def verification(request):
+    profile = ContractorProfile.objects.filter(user=request.user).first()
+    if profile is None:
+        messages.error(request, "Please create your company profile first.")
+        return redirect("contractors:profile_edit")
+
+    documents = profile.documents.all()
+
+    if request.method == "POST":
+        if documents.count() >= MAX_DOCUMENTS:
+            messages.error(request, "You have reached the limit of 8 documents. Delete one first.")
+            return redirect("contractors:verification")
+        form = VerificationDocumentForm(request.POST, request.FILES)
+        if form.is_valid():
+            document = form.save(commit=False)
+            document.contractor = profile  # always the logged-in contractor
+            document.save()
+            messages.success(request, "Document uploaded. Our team will review it soon.")
+            return redirect("contractors:verification")
+    else:
+        form = VerificationDocumentForm()
+
+    return render(
+        request,
+        "contractors/verification.html",
+        {"profile": profile, "documents": documents, "form": form},
+    )
+
+
+@contractor_required
+def verification_delete(request, pk):
+    profile = get_object_or_404(ContractorProfile, user=request.user)
+    # Ownership check, and approved documents stay on record
+    document = get_object_or_404(
+        VerificationDocument, pk=pk, contractor=profile, status__in=["pending", "rejected"]
+    )
+    if request.method == "POST":
+        document.file.delete(save=False)  # remove the file from disk too
+        document.delete()
+        messages.success(request, "Document deleted.")
+    return redirect("contractors:verification")
+
+
+@staff_member_required
+def verification_file(request, pk):
+    """Only Nirmaan staff can download a verification document."""
+    document = get_object_or_404(VerificationDocument, pk=pk)
+    return FileResponse(
+        document.file.open("rb"),
+        as_attachment=True,
+        filename=os.path.basename(document.file.name),
+    )    
