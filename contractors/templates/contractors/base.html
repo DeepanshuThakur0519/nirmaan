@@ -23,8 +23,10 @@
       <a href="{% url 'contractors:list' %}">Contractors</a>
     </nav>
     <div class="nav-actions">
-      {% if user.is_authenticated %}
-        {% if user.account.role == "contractor" %}<a class="btn btn-link" href="{% url 'contractors:dashboard' %}">Dashboard</a>{% endif %}{% if user.account.role == "contractor" %}<a class="btn btn-link" href="{% url 'contractors:dashboard' %}">Dashboard</a>{% endif %}{% if user.account.role == "contractor" %}<a class="btn btn-link" href="{% url 'contractors:dashboard' %}">Dashboard</a>{% endif %}{% if user.account.role == "contractor" %}<a class="btn btn-link" href="{% url 'contractors:dashboard' %}">Dashboard</a>{% endif %}{% if user.account.role == "client" %}<a class="btn btn-link" href="{% url 'contractors:my_requests' %}">My requests</a>{% endif %}{% if user.account.role == "client" %}<a class="btn btn-link" href="{% url 'contractors:my_requests' %}">My requests</a>{% endif %}{% if user.account.role == "client" %}<a class="btn btn-link" href="{% url 'contractors:my_requests' %}">My requests</a>{% endif %}<span class="nav-user">Hi, {{ user.first_name|default:user.username }}</span>
+    {% if user.is_authenticated %}
+        {% if user.account.role == "contractor" %}<a class="btn btn-link" href="{% url 'contractors:dashboard' %}">Dashboard</a>{% endif %}
+        {% if user.account.role == "client" %}<a class="btn btn-link" href="{% url 'contractors:my_requests' %}">My requests</a>{% endif %}
+        <span class="nav-user">Hi, {{ user.first_name|default:user.username }}</span>
         <form method="post" action="{% url 'contractors:logout' %}" class="logout-form">
           {% csrf_token %}
           <button type="submit" class="btn btn-link">Log out</button>
